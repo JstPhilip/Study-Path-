@@ -1,0 +1,226 @@
+{
+  "entities": {
+    "User": {
+      "title": "User",
+      "description": "User scholar profile holding XP and level milestones",
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "Display name of the scholar"
+        },
+        "email": {
+          "type": "string",
+          "format": "email",
+          "description": "Email address of the scholar"
+        },
+        "xp": {
+          "type": "integer",
+          "description": "Experience points gained by the scholar"
+        },
+        "studyMinutes": {
+          "type": "integer",
+          "description": "Total spent study time in minutes"
+        },
+        "completedMilestones": {
+          "type": "array",
+          "description": "List of cleared academic milestone keys"
+        },
+        "solvedProblemsCount": {
+          "type": "integer",
+          "description": "Count of resolved complex problems"
+        },
+        "quizScores": {
+          "type": "object",
+          "description": "Key-value pair of course module quiz results"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "name",
+        "email",
+        "xp",
+        "studyMinutes",
+        "completedMilestones",
+        "solvedProblemsCount",
+        "quizScores",
+        "createdAt",
+        "updatedAt"
+      ]
+    },
+    "Deadline": {
+      "title": "Deadline",
+      "description": "Academic assignment or test deadline card",
+      "type": "object",
+      "properties": {
+        "userId": {
+          "type": "string"
+        },
+        "title": {
+          "type": "string"
+        },
+        "subject": {
+          "type": "string"
+        },
+        "date": {
+          "type": "string"
+        },
+        "completed": {
+          "type": "boolean"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "userId",
+        "title",
+        "subject",
+        "date",
+        "completed",
+        "createdAt"
+      ]
+    },
+    "StudyLog": {
+      "title": "StudyLog",
+      "description": "Completed POMODORO study session logged details",
+      "type": "object",
+      "properties": {
+        "userId": {
+          "type": "string"
+        },
+        "topic": {
+          "type": "string"
+        },
+        "duration": {
+          "type": "integer"
+        },
+        "date": {
+          "type": "string"
+        },
+        "xpGained": {
+          "type": "integer"
+        },
+        "comments": {
+          "type": "string"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "userId",
+        "topic",
+        "duration",
+        "date",
+        "xpGained",
+        "comments",
+        "createdAt"
+      ]
+    },
+    "ScratchNote": {
+      "title": "ScratchNote",
+      "description": "Synchronized multi-line workspace pad and equation markdown draft",
+      "type": "object",
+      "properties": {
+        "userId": {
+          "type": "string"
+        },
+        "content": {
+          "type": "string"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "userId",
+        "content",
+        "updatedAt"
+      ]
+    },
+    "Resource": {
+      "title": "Resource",
+      "description": "Academic bookmark link to YouTube, textbook, pdf, or lecture note sheets",
+      "type": "object",
+      "properties": {
+        "userId": {
+          "type": "string"
+        },
+        "title": {
+          "type": "string"
+        },
+        "url": {
+          "type": "string"
+        },
+        "courseSubject": {
+          "type": "string"
+        },
+        "category": {
+          "type": "string",
+          "enum": [
+            "YouTube",
+            "PDF",
+            "Research Paper",
+            "Textbook",
+            "Documentation",
+            "Cheat Sheet",
+            "Other"
+          ]
+        },
+        "notes": {
+          "type": "string"
+        },
+        "isFavorite": {
+          "type": "boolean"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "userId",
+        "title",
+        "url",
+        "courseSubject",
+        "category",
+        "notes",
+        "isFavorite",
+        "createdAt"
+      ]
+    }
+  },
+  "firestore": {
+    "users/{userId}": {
+      "schema": "User",
+      "description": "Collection storing student details, level data, and accomplishments"
+    },
+    "deadlines/{deadlineId}": {
+      "schema": "Deadline",
+      "description": "Collection tracking assignment & test deadlines per scholar"
+    },
+    "studyLogs/{logId}": {
+      "schema": "StudyLog",
+      "description": "Collection logging timed study sessions and accumulated scientific XP increments"
+    },
+    "scratchNotes/{noteId}": {
+      "schema": "ScratchNote",
+      "description": "Collection storing a single global rich-markdown workspace pad per user"
+    },
+    "resources/{resourceId}": {
+      "schema": "Resource",
+      "description": "Collection containing bookmarked scientific external study link details"
+    }
+  }
+}

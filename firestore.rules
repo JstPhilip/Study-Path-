@@ -1,0 +1,131 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // Catch-All default deny
+    match /{document=**} {
+      allow read, write: if false;
+    }
+    
+    // Helper Primitives
+    function isSignedIn() {
+      return request.auth != null;
+    }
+    
+    function isVerified() {
+      return isSignedIn() && (request.auth.token.email_verified == true || request.auth.token.email != null);
+    }
+    
+    function isOwner(userId) {
+      return isVerified() && request.auth.uid == userId;
+    }
+    
+    function isValidId(id) {
+      return id is string && id.size() > 0 && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+    
+    function incoming() {
+      return request.resource.data;
+    }
+    
+    function existing() {
+      return resource.data;
+    }
+    
+    // Entity Rules
+    
+    function isValidUser(data) {
+      return data.name is string && data.name.size() > 0 && data.name.size() <= 100
+          && data.email is string && data.email.size() > 0 && data.email.size() <= 150
+          && data.xp is int && data.xp >= 0 && data.xp <= 1000000
+          && data.studyMinutes is int && data.studyMinutes >= 0 && data.studyMinutes <= 1000000
+          && data.completedMilestones is list && data.completedMilestones.size() <= 100
+          && data.solvedProblemsCount is int && data.solvedProblemsCount >= 0 && data.solvedProblemsCount <= 10000
+          && data.quizScores is map && data.quizScores.size() <= 100
+          && (!('avatarUrl' in data) || (data.avatarUrl is string && data.avatarUrl.size() <= 2000))
+          && (!('deadlines' in data) || (data.deadlines is list && data.deadlines.size() <= 100))
+          && data.createdAt is string
+          && data.updatedAt is string;
+    }
+    
+    function isValidDeadline(data) {
+      return data.userId == request.auth.uid
+          && data.title is string && data.title.size() > 0 && data.title.size() <= 200
+          && data.subject is string && data.subject.size() > 0 && data.subject.size() <= 100
+          && data.date is string && data.date.size() > 0 && data.date.size() <= 50
+          && data.completed is bool
+          && data.createdAt is string;
+    }
+    
+    function isValidStudyLog(data) {
+      return data.userId == request.auth.uid
+          && data.topic is string && data.topic.size() > 0 && data.topic.size() <= 200
+          && data.duration is int && data.duration >= 0 && data.duration <= 10000
+          && data.date is string && data.date.size() > 0 && data.date.size() <= 50
+          && data.xpGained is int && data.xpGained >= 0 && data.xpGained <= 10000
+          && data.comments is string && data.comments.size() <= 1000
+          && data.createdAt is string;
+    }
+    
+    function isValidScratchNote(data) {
+      return data.userId == request.auth.uid
+          && data.content is string && data.content.size() <= 50000
+          && data.updatedAt is string;
+    }
+    
+    function isValidResource(data) {
+      return data.userId == request.auth.uid
+          && data.title is string && data.title.size() > 0 && data.title.size() <= 200
+          && data.url is string && data.url.size() > 0 && data.url.size() <= 2000
+          && data.courseSubject is string && data.courseSubject.size() > 0 && data.courseSubject.size() <= 100
+          && data.category is string && data.category.size() > 0 && data.category.size() <= 100
+          && data.notes is string && data.notes.size() <= 2000
+          && data.isFavorite is bool
+          && data.createdAt is string;
+    }
+    
+    // Path Declarations
+    
+    match /users/{userId} {
+      allow get: if isOwner(userId);
+      allow list: if isVerified();
+      allow create: if isOwner(userId) && isValidUser(incoming());
+      allow update: if isOwner(userId) && isValidUser(incoming())
+                       && incoming().email == existing().email 
+                       && incoming().createdAt == existing().createdAt;
+      allow delete: if false;
+    }
+    
+    match /deadlines/{deadlineId} {
+      allow get: if isVerified() && existing().userId == request.auth.uid;
+      allow list: if isVerified() && resource.data.userId == request.auth.uid;
+      allow create: if isVerified() && isValidDeadline(incoming()) && isValidId(deadlineId);
+      allow update: if isVerified() && existing().userId == request.auth.uid && isValidDeadline(incoming()) && incoming().userId == existing().userId;
+      allow delete: if isVerified() && existing().userId == request.auth.uid;
+    }
+    
+    match /studyLogs/{logId} {
+      allow get: if isVerified() && existing().userId == request.auth.uid;
+      allow list: if isVerified() && resource.data.userId == request.auth.uid;
+      allow create: if isVerified() && isValidStudyLog(incoming()) && isValidId(logId);
+      allow update: if isVerified() && existing().userId == request.auth.uid && isValidStudyLog(incoming()) && incoming().userId == existing().userId;
+      allow delete: if isVerified() && existing().userId == request.auth.uid;
+    }
+    
+    match /scratchNotes/{noteId} {
+      allow get: if isVerified() && noteId == request.auth.uid;
+      allow list: if isVerified() && resource.data.userId == request.auth.uid;
+      allow create: if isVerified() && isValidScratchNote(incoming()) && isValidId(noteId) && noteId == request.auth.uid;
+      allow update: if isVerified() && noteId == request.auth.uid && isValidScratchNote(incoming()) && incoming().userId == request.auth.uid;
+      allow delete: if isVerified() && noteId == request.auth.uid;
+    }
+    
+    match /resources/{resourceId} {
+      allow get: if isVerified() && existing().userId == request.auth.uid;
+      allow list: if isVerified() && resource.data.userId == request.auth.uid;
+      allow create: if isVerified() && isValidResource(incoming()) && isValidId(resourceId);
+      allow update: if isVerified() && existing().userId == request.auth.uid && isValidResource(incoming()) && incoming().userId == existing().userId;
+      allow delete: if isVerified() && existing().userId == request.auth.uid;
+    }
+  }
+}

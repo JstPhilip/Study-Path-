@@ -1,0 +1,6 @@
+{
+  "name": "Study Path",
+  "description": "An AI-powered academic dashboard to help students master courses, solve problems with step-by-step guides, manage study timers, view interactive visual project simulations, and track upcoming deadlines.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
